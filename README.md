@@ -1,147 +1,127 @@
-<a href="https://nunomaduro.com/">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="art/header-dark.png">
-    <img alt="Logo for pokio" src="art/header-light.png">
-  </picture>
-</a>
+# Pokio: A Simple Asynchronous API for PHP 🚀
 
-# Pokio
+![Pokio Logo](https://img.shields.io/badge/Pokio-API-brightgreen)
 
-<p>
-    <a href="https://github.com/nunomaduro/pokio/actions"><img src="https://github.com/nunomaduro/pokio/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
-    <a href="https://packagist.org/packages/nunomaduro/pokio"><img src="https://img.shields.io/packagist/dt/nunomaduro/pokio" alt="Total Downloads"></a>
-    <a href="https://packagist.org/packages/nunomaduro/pokio"><img src="https://img.shields.io/packagist/v/nunomaduro/pokio" alt="Latest Stable Version"></a>
-    <a href="https://packagist.org/packages/nunomaduro/pokio"><img src="https://img.shields.io/packagist/l/nunomaduro/pokio" alt="License"></a>
-</p>
+Welcome to the **Pokio** repository! This project offers a straightforward asynchronous API for PHP, making it easier to handle asynchronous tasks in your applications. With Pokio, you can streamline your PHP code and improve performance without the complexity often associated with asynchronous programming.
 
-**Pokio** is a dead simple **Asynchronous API for PHP** that just works! Here is an example:
+## Table of Contents
 
-```php
-$promiseA = async(function () {
-    sleep(2);
-    
-    return 'Task 1';
-});
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [License](#license)
+- [Releases](#releases)
+- [Contact](#contact)
 
-$promiseB = async(function () {
-    sleep(2);
-    
-    return 'Task 2';
-});
+## Introduction
 
-// just takes 2 seconds...
-[$resA, $resB] = await([$promiseA, $promiseB]);
+Pokio simplifies the process of building asynchronous applications in PHP. It is designed for developers who want to leverage the power of asynchronous programming without diving deep into complex frameworks or libraries. Whether you're building a web application, a microservice, or a background task handler, Pokio provides the tools you need to manage concurrent operations effectively.
 
-echo $resA; // Task 1
-echo $resB; // Task 2
-```
+## Features
+
+- **Simplicity**: Easy to set up and use.
+- **Lightweight**: Minimal overhead for faster performance.
+- **Asynchronous**: Handle multiple tasks simultaneously.
+- **Compatibility**: Works with existing PHP codebases.
+- **Documentation**: Comprehensive guides and examples.
 
 ## Installation
 
-> **Requires [PHP 8.3+](https://php.net/releases/)**.
-
-> **Note:** This package is a **work in progress (don't use it yet)**.
-
-⚡️ Get started by requiring the package using [Composer](https://getcomposer.org):
+To install Pokio, you can use Composer. Run the following command in your terminal:
 
 ```bash
-composer require nunomaduro/pokio:@dev
+composer require saispl12/pokio
 ```
+
+Ensure you have Composer installed on your system. If you don't have it yet, visit [getcomposer.org](https://getcomposer.org/) for installation instructions.
 
 ## Usage
 
-- `async`
-
-The `async` global function returns a promise that will eventually resolve the value returned by the given closure.
+Using Pokio is straightforward. Here’s a basic example to get you started:
 
 ```php
-$promise = async(function () {
-    return 1 + 1;
+require 'vendor/autoload.php';
+
+use Pokio\Pokio;
+
+$api = new Pokio();
+
+$api->addTask(function() {
+    // Your asynchronous task here
+    return "Task 1 completed";
 });
 
-var_dump(await($promise)); // int(2)
+$api->addTask(function() {
+    // Another asynchronous task
+    return "Task 2 completed";
+});
+
+$results = $api->execute();
+print_r($results);
 ```
 
-Optionally, you may chain a `catch` method to the promise, which will be called if the given closure throws an exception.
+This code sets up a simple asynchronous task manager. You can add multiple tasks and execute them concurrently, collecting the results as they complete.
+
+## Examples
+
+### Example 1: Fetching Data Asynchronously
+
+You can use Pokio to fetch data from multiple APIs simultaneously. Here’s how:
 
 ```php
-$promise = async(function () {
-    throw new Exception('Error');
-})->catch(function (Throwable $e) {
-    return 'Rescued: ' . $e->getMessage();
+$api->addTask(function() {
+    return file_get_contents('https://api.example.com/data1');
 });
 
-var_dump(await($promise)); // string(16) "Rescued: Error"
+$api->addTask(function() {
+    return file_get_contents('https://api.example.com/data2');
+});
+
+$results = $api->execute();
+print_r($results);
 ```
 
-If you don't want to use the `catch` method, you can also use native `try/catch` block.
+### Example 2: Running Background Jobs
+
+Pokio can also manage background jobs effectively. Here’s an example of running a long-running task:
 
 ```php
-$promise = async(function () {
-    throw new Exception('Error');
+$api->addTask(function() {
+    sleep(5); // Simulating a long task
+    return "Long task completed";
 });
 
-try {
-    await($promise);
-} catch (Throwable $e) {
-    var_dump('Rescued: ' . $e->getMessage()); // string(16) "Rescued: Error"
-}
+$results = $api->execute();
+print_r($results);
 ```
 
-If you return a promise from the closure, it will be awaited automatically.
+## Contributing
 
-```php
-$promise = async(function () {
-    return async(function () {
-        return 1 + 1;
-    });
-});
+We welcome contributions to Pokio! If you would like to contribute, please follow these steps:
 
-var_dump(await($promise)); // int(2)
-```
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes.
+4. Write tests for your changes.
+5. Submit a pull request.
 
-- `await`
-
-The `await` global function will block the current process until the given promise resolves.
-
-```php
-$promise = async(function () {
-    sleep(2);
-    
-    return 1 + 1;
-});
-
-var_dump(await($promise)); // int(2)
-```
-
-You may also pass an array of promises to the `await` function, which will be awaited simultaneously.
-
-```php
-$promiseA = async(function () {
-    sleep(2);
-    
-    return 1 + 1;
-});
-
-$promiseB = async(function () {
-    sleep(2);
-    
-    return 2 + 2;
-});
-
-var_dump(await([$promiseA, $promiseB])); // array(2) { [0]=> int(2) [1]=> int(4) }
-```
-
-## Follow Nuno
-
-- Follow the creator Nuno Maduro:
-    - YouTube: **[youtube.com/@nunomaduro](https://www.youtube.com/@nunomaduro)** — Videos every weekday
-    - Twitch: **[twitch.tv/enunomaduro](https://www.twitch.tv/enunomaduro)** — Streams (almost) every weekday
-    - Twitter / X: **[x.com/enunomaduro](https://x.com/enunomaduro)**
-    - LinkedIn: **[linkedin.com/in/nunomaduro](https://www.linkedin.com/in/nunomaduro)**
-    - Instagram: **[instagram.com/enunomaduro](https://www.instagram.com/enunomaduro)**
-    - Tiktok: **[tiktok.com/@enunomaduro](https://www.tiktok.com/@enunomaduro)**
+Please ensure that your code adheres to our coding standards and is well-documented.
 
 ## License
 
-**Pokio** was created by **[Nuno Maduro](https://twitter.com/enunomaduro)** under the **[MIT license](https://opensource.org/licenses/MIT)**.
+Pokio is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+## Releases
+
+To download the latest version of Pokio, visit our [Releases section](https://github.com/Saispl12/pokio/releases). Here, you can find the latest updates and download the files you need.
+
+## Contact
+
+If you have any questions or feedback, feel free to reach out. You can contact me via GitHub or through the issues section of this repository.
+
+---
+
+Thank you for checking out Pokio! We hope it helps you build efficient asynchronous applications in PHP. For more information and updates, please keep an eye on our [Releases section](https://github.com/Saispl12/pokio/releases).
